@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,9 +28,16 @@ import com.devx.signbridge.ui.theme.SignBridgeTheme
 
 @Composable
 fun SignInScreen(
+    uiState: SignInUiState,
     onEvent: (SignInScreenEvent) -> Unit,
     onNavigateToHome: () -> Unit
 ) {
+    LaunchedEffect(key1 = uiState.isSuccessful) {
+        if (uiState.isSuccessful) {
+            onNavigateToHome()
+        }
+    }
+
     Scaffold { innerPadding ->
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -54,7 +62,7 @@ fun SignInScreen(
 
             ActionIconButton(
                 text = stringResource(R.string.continue_with_google),
-                onClick = {},
+                onClick = { onEvent(SignInScreenEvent.SignInWithGoogle) },
                 icon = {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_google),
@@ -73,6 +81,7 @@ fun SignInScreen(
 private fun SignInScreenPreview() {
     SignBridgeTheme {
         SignInScreen(
+            uiState = SignInUiState(),
             onEvent = { },
             onNavigateToHome = { }
         )
