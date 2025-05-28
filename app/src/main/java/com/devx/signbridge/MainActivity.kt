@@ -15,6 +15,8 @@ import com.devx.signbridge.auth.ui.CompleteProfileScreen
 import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInScreen
 import com.devx.signbridge.auth.ui.SignInViewModel
+import com.devx.signbridge.home.ui.SearchUserScreen
+import com.devx.signbridge.home.ui.SearchUserViewModel
 import com.devx.signbridge.home.ui.HomeScreen
 import com.devx.signbridge.home.ui.HomeViewModel
 import com.devx.signbridge.ui.theme.SignBridgeTheme
@@ -87,6 +89,15 @@ fun SignBrideApp(startDestination: Route) {
                 navController = navController
             )
         }
+        composable<Route.SearchUser> {
+            val viewModel = koinViewModel<SearchUserViewModel>()
+            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+            SearchUserScreen(
+                uiState = uiState.value,
+                onEvent = viewModel::onEvent
+            )
+        }
     }
 }
 
@@ -99,6 +110,9 @@ sealed interface Route {
 
     @Serializable
     data object Home: Route
+
+    @Serializable
+    data object SearchUser: Route
 }
 
 @Preview(showBackground = true)

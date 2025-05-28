@@ -3,4 +3,7 @@
     <string name="continue_with_google">Continue with Google</string>
     <string name="profile_picture">Profile Picture</string>
     <string name="logout">Logout</string>
+    <string name="new_contact">New Contact</string>
+    <string name="search">Search</string>
+    <string name="search_input_placeholder">Eg. johndoe@example.com</string>
 </resources>
