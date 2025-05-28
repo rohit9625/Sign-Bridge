@@ -3,6 +3,7 @@ package com.devx.signbridge.auth.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devx.signbridge.auth.domain.GoogleAuthClient
+import com.devx.signbridge.auth.domain.UserRepository
 import com.devx.signbridge.auth.domain.model.User
 import com.devx.signbridge.core.domain.model.AuthError
 import com.devx.signbridge.core.domain.model.Result
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SignInViewModel(
-    private val googleAuthClient: GoogleAuthClient
+    private val googleAuthClient: GoogleAuthClient,
+    private val userRepository: UserRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState = _uiState.asStateFlow()
@@ -40,7 +42,10 @@ class SignInViewModel(
                     }
                 }
                 is Result.Success -> {
-                    _uiState.update { it.copy(isSuccessful = true, isSigningIn = false) }
+                    val isNewUser = userRepository.isNewUser(result.data.userId)
+                    _uiState.update {
+                        it.copy(isSuccessful = true, isSigningIn = false, isSignUp = isNewUser)
+                    }
                 }
             }
         }

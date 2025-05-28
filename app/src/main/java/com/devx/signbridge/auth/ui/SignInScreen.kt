@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.devx.signbridge.R
+import com.devx.signbridge.Route
 import com.devx.signbridge.auth.ui.components.ActionIconButton
 import com.devx.signbridge.ui.theme.SignBridgeTheme
 
@@ -30,11 +31,15 @@ import com.devx.signbridge.ui.theme.SignBridgeTheme
 fun SignInScreen(
     uiState: SignInUiState,
     onEvent: (SignInScreenEvent) -> Unit,
-    onSuccess: () -> Unit
+    onSuccess: (Route) -> Unit
 ) {
     LaunchedEffect(key1 = uiState.isSuccessful) {
         if (uiState.isSuccessful) {
-            onSuccess()
+            if(uiState.isSignUp) {
+                onSuccess(Route.CompleteProfile)
+            } else {
+                onSuccess(Route.Home)
+            }
         }
     }
 

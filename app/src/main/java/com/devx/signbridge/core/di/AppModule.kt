@@ -14,6 +14,6 @@ val appModule = module {
     single { CredentialManager.create(androidContext()) }
     single { GoogleAuthClient(context = androidContext(), credentialManager = get()) }
     single<UserRepository> { UserRepositoryImpl() }
-    viewModel { SignInViewModel(googleAuthClient = get()) }
+    viewModel { SignInViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { CompleteProfileViewModel(googleAuthClient = get(), userRepository = get()) }
 }

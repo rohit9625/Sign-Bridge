@@ -8,6 +8,7 @@ import com.devx.signbridge.core.domain.model.Result
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.firestore
+import com.google.firebase.firestore.toObject
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryImpl: UserRepository {
@@ -33,6 +34,20 @@ class UserRepositoryImpl: UserRepository {
         } catch (e: Exception) {
             Log.e(TAG, "Unknown error while storing user details", e)
             Result.Error(DatabaseError.UNKNOWN_ERROR)
+        }
+    }
+
+    override suspend fun getUserDetails(userId: String): Result<User, DatabaseError> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun isNewUser(userId: String): Boolean {
+        return try {
+            val document = db.collection("users").document(userId).get().await()
+            document.toObject<User>() == null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while checking new user", e)
+            false
         }
     }
 

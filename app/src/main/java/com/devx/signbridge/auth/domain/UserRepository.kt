@@ -6,4 +6,8 @@ import com.devx.signbridge.core.domain.model.Result
 
 interface UserRepository {
     suspend fun storeUserDetails(user: User): Result<Unit, DatabaseError>
+
+    suspend fun getUserDetails(userId: String): Result<User, DatabaseError>
+
+    suspend fun isNewUser(userId: String): Boolean
 }

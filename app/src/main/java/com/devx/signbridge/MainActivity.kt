@@ -10,9 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.devx.signbridge.auth.domain.GoogleAuthClient
-import com.devx.signbridge.auth.domain.model.User
 import com.devx.signbridge.auth.ui.CompleteProfileScreen
 import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInScreen
@@ -51,8 +49,8 @@ fun SignBrideApp(startDestination: Route) {
             SignInScreen(
                 uiState = uiState.value,
                 onEvent = viewModel::onEvent,
-                onSuccess = {
-                    navController.navigate(Route.CompleteProfile)
+                onSuccess = { route ->
+                    navController.navigate(route)
                 }
             )
         }
