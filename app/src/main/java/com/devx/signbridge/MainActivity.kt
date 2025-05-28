@@ -62,6 +62,7 @@ fun SignBrideApp(startDestination: Route) {
 
             CompleteProfileScreen(
                 uiState = uiState.value,
+                onEvent = viewModel::onEvent,
                 onContinue = {
                     navController.navigate(Route.Home)
                 }
