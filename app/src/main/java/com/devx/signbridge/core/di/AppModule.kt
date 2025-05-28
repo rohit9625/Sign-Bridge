@@ -6,6 +6,7 @@ import com.devx.signbridge.auth.domain.GoogleAuthClient
 import com.devx.signbridge.auth.domain.UserRepository
 import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInViewModel
+import com.devx.signbridge.home.ui.HomeViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -16,4 +17,5 @@ val appModule = module {
     single<UserRepository> { UserRepositoryImpl() }
     viewModel { SignInViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { CompleteProfileViewModel(googleAuthClient = get(), userRepository = get()) }
+    viewModel { HomeViewModel(googleAuthClient = get()) }
 }

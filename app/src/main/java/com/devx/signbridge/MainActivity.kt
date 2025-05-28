@@ -16,6 +16,7 @@ import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInScreen
 import com.devx.signbridge.auth.ui.SignInViewModel
 import com.devx.signbridge.home.ui.HomeScreen
+import com.devx.signbridge.home.ui.HomeViewModel
 import com.devx.signbridge.ui.theme.SignBridgeTheme
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
@@ -50,7 +51,13 @@ fun SignBrideApp(startDestination: Route) {
                 uiState = uiState.value,
                 onEvent = viewModel::onEvent,
                 onSuccess = { route ->
-                    navController.navigate(route)
+                    navController.navigate(route) {
+                        if (route == Route.Home) {
+                            popUpTo(Route.Auth) {
+                                inclusive = true
+                            }
+                        }
+                    }
                 }
             )
         }
@@ -62,12 +69,23 @@ fun SignBrideApp(startDestination: Route) {
                 uiState = uiState.value,
                 onEvent = viewModel::onEvent,
                 onContinue = {
-                    navController.navigate(Route.Home)
+                    navController.navigate(Route.Home) {
+                        popUpTo(Route.Auth) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
         composable<Route.Home> {
-            HomeScreen()
+            val viewModel = koinViewModel<HomeViewModel>()
+            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+            HomeScreen(
+                uiState = uiState.value,
+                onEvent = viewModel::onEvent,
+                navController = navController
+            )
         }
     }
 }

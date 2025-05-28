@@ -78,17 +78,20 @@ class GoogleAuthClient(
         return Result.Error(AuthError.UNKNOWN_ERROR)
     }
 
-    suspend fun signOut() {
-        try {
+    suspend fun signOut(): Boolean {
+        return try {
             auth.signOut()
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val clearCredentialRequest = ClearCredentialStateRequest()
                 credentialManager.clearCredentialState(clearCredentialRequest)
             }
+            true
         } catch (e: ClearCredentialException) {
             Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}", e)
+            false
         } catch (e: Exception) {
             Log.e(TAG, "Error while signing out user", e)
+            false
         }
     }
 
