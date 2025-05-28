@@ -19,5 +19,5 @@ val appModule = module {
     viewModel { SignInViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { CompleteProfileViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { HomeViewModel(googleAuthClient = get()) }
-    viewModel { SearchUserViewModel() }
+    viewModel { SearchUserViewModel(userRepository = get()) }
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -67,7 +68,7 @@ fun SearchUserScreen(
                     SearchBarDefaults.InputField(
                         query = uiState.searchQuery,
                         onQueryChange = { onEvent(SearchUserEvent.OnQueryChange(it)) },
-                        onSearch = { expanded = false; onEvent(SearchUserEvent.OnSearchAction) },
+                        onSearch = { onEvent(SearchUserEvent.OnSearchAction) },
                         expanded = expanded,
                         onExpandedChange = { expanded = it },
                         placeholder = { Text(stringResource(R.string.search_input_placeholder)) },
@@ -83,11 +84,19 @@ fun SearchUserScreen(
                 expanded = expanded,
                 onExpandedChange = { expanded = it }
             ) {
+                if(uiState.searchResults.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "No users found matching the query")
+                    }
+                }
                 LazyColumn {
-                    items(10) {
+                    items(uiState.searchResults, key = { it.userId }) {
                         UserItem(
-                            user = User("1", "Alice", "alice@example.com"),
-                            onAddFriend = {}
+                            user = it,
+                            onAddFriend = { }
                         )
                         HorizontalDivider()
                     }

@@ -9,5 +9,9 @@ interface UserRepository {
 
     suspend fun getUserDetails(userId: String): Result<User, DatabaseError>
 
+    suspend fun getUserByEmail(email: String): Result<User, DatabaseError>
+
+    suspend fun getUsersByUsername(username: String): Result<List<User>, DatabaseError>
+
     suspend fun isNewUser(userId: String): Boolean
 }

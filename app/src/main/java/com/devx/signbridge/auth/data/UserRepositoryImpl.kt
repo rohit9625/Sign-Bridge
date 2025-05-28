@@ -41,6 +41,42 @@ class UserRepositoryImpl: UserRepository {
         TODO("Not yet implemented")
     }
 
+    override suspend fun getUserByEmail(email: String): Result<User, DatabaseError> {
+        return try {
+            val querySnapshot = db.collection("users")
+                .whereEqualTo("email", email)
+                .limit(1) // Because email is unique
+                .get()
+                .await()
+            val user = querySnapshot.documents.firstOrNull()?.toObject<User>()
+            if (user != null) {
+                Result.Success(user)
+            } else {
+                Result.Error(DatabaseError.NOT_FOUND)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while searching user by email", e)
+            Result.Error(DatabaseError.UNKNOWN_ERROR)
+        }
+    }
+
+    override suspend fun getUsersByUsername(username: String): Result<List<User>, DatabaseError> {
+        return try {
+            val querySnapshot = db.collection("users")
+                .orderBy("name") // Necessary for range queries
+                .startAt(username)
+                .endAt(username + "\uf8ff")
+                .limit(10) // Always limit your results
+                .get()
+                .await()
+            val users = querySnapshot.toObjects(User::class.java).toList()
+            Result.Success(users)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error while searching users by username", e)
+            Result.Error(DatabaseError.UNKNOWN_ERROR)
+        }
+    }
+
     override suspend fun isNewUser(userId: String): Boolean {
         return try {
             val document = db.collection("users").document(userId).get().await()
