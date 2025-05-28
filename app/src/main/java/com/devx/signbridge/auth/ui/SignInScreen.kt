@@ -30,11 +30,11 @@ import com.devx.signbridge.ui.theme.SignBridgeTheme
 fun SignInScreen(
     uiState: SignInUiState,
     onEvent: (SignInScreenEvent) -> Unit,
-    onNavigateToHome: () -> Unit
+    onSuccess: () -> Unit
 ) {
     LaunchedEffect(key1 = uiState.isSuccessful) {
         if (uiState.isSuccessful) {
-            onNavigateToHome()
+            onSuccess()
         }
     }
 
@@ -83,7 +83,7 @@ private fun SignInScreenPreview() {
         SignInScreen(
             uiState = SignInUiState(),
             onEvent = { },
-            onNavigateToHome = { }
+            onSuccess = { }
         )
     }
 }

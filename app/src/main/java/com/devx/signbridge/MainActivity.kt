@@ -4,16 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.devx.signbridge.auth.domain.GoogleAuthClient
+import com.devx.signbridge.auth.domain.model.User
+import com.devx.signbridge.auth.ui.CompleteProfileScreen
+import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInScreen
 import com.devx.signbridge.auth.ui.SignInViewModel
+import com.devx.signbridge.home.ui.HomeScreen
 import com.devx.signbridge.ui.theme.SignBridgeTheme
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
@@ -47,13 +51,24 @@ fun SignBrideApp(startDestination: Route) {
             SignInScreen(
                 uiState = uiState.value,
                 onEvent = viewModel::onEvent,
-                onNavigateToHome = {
+                onSuccess = {
+                    navController.navigate(Route.CompleteProfile)
+                }
+            )
+        }
+        composable<Route.CompleteProfile> {
+            val viewModel = koinViewModel<CompleteProfileViewModel>()
+            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+            CompleteProfileScreen(
+                uiState = uiState.value,
+                onContinue = {
                     navController.navigate(Route.Home)
                 }
             )
         }
         composable<Route.Home> {
-            Text("Home Screen")
+            HomeScreen()
         }
     }
 }
@@ -61,6 +76,9 @@ fun SignBrideApp(startDestination: Route) {
 sealed interface Route {
     @Serializable
     data object Auth: Route
+
+    @Serializable
+    data object CompleteProfile: Route
 
     @Serializable
     data object Home: Route

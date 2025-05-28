@@ -3,6 +3,7 @@ package com.devx.signbridge.auth.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devx.signbridge.auth.domain.GoogleAuthClient
+import com.devx.signbridge.auth.domain.model.User
 import com.devx.signbridge.core.domain.model.AuthError
 import com.devx.signbridge.core.domain.model.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,8 @@ class SignInViewModel(
             SignInScreenEvent.SignInWithGoogle -> signInWithGoogle()
         }
     }
+
+    fun getSignedInUser() : User? = googleAuthClient.getSignedInUser()
 
     private fun signInWithGoogle() {
         viewModelScope.launch {
