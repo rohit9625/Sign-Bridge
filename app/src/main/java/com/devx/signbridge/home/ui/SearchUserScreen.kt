@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -96,7 +96,7 @@ fun SearchUserScreen(
                     items(uiState.searchResults, key = { it.userId }) {
                         UserItem(
                             user = it,
-                            onAddFriend = { }
+                            onInitiateCall = { }
                         )
                         HorizontalDivider()
                     }
@@ -119,7 +119,7 @@ fun SearchUserScreen(
 @Composable
 fun UserItem(
     user: User,
-    onAddFriend: () -> Unit,
+    onInitiateCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -158,10 +158,10 @@ fun UserItem(
                 Text(text = user.email, style = MaterialTheme.typography.bodySmall)
             }
             Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = onAddFriend) {
+            IconButton(onClick = onInitiateCall) {
                 Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Send Friend Request to ${user.username}",
+                    imageVector = Icons.Filled.Call,
+                    contentDescription = "Call ${user.username}",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -176,7 +176,7 @@ private fun UserItemPreview() {
     SignBridgeTheme {
         UserItem(
             user = User("1", "Alice Preview", "alice.preview@example.com"),
-            onAddFriend = {}
+            onInitiateCall = {}
         )
     }
 }
