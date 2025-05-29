@@ -2,7 +2,7 @@
 agp = "8.10.0"
 coil = "3.2.0"
 credentials = "1.5.0"
-firebaseBom = "33.13.0"
+firebaseBom = "33.14.0"
 googleid = "1.1.1"
 koin = "4.0.3"
 kotlin = "2.1.20"
@@ -29,6 +29,7 @@ firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 android-libraries-identity-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

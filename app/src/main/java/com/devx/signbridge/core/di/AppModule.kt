@@ -18,6 +18,6 @@ val appModule = module {
     single<UserRepository> { UserRepositoryImpl() }
     viewModel { SignInViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { CompleteProfileViewModel(googleAuthClient = get(), userRepository = get()) }
-    viewModel { HomeViewModel(googleAuthClient = get()) }
+    viewModel { HomeViewModel(googleAuthClient = get(), userRepository = get()) }
     viewModel { SearchUserViewModel(userRepository = get()) }
 }
