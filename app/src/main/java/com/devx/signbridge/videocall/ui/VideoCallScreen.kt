@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,9 +31,14 @@ import org.webrtc.VideoTrack
 fun VideoCallScreen(
     onEvent: (VideoCallEvent) -> Unit,
     videoCallState: VideoCallState,
+    onScreenReady: () -> Unit = {},
     remoteVideoTrackState: VideoTrack? = null,
     localVideoTrackState: VideoTrack? = null
 ) {
+
+    LaunchedEffect(Unit) {
+        onScreenReady()
+    }
 
     Scaffold { innerPadding ->
         Box(
@@ -65,7 +71,7 @@ fun VideoCallScreen(
 
             VideoCallControls(
                 modifier = Modifier
-                    .padding(bottom = 32.dp)
+                    .padding(bottom = 16.dp)
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
                 callState = videoCallState,

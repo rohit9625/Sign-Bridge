@@ -15,7 +15,7 @@ class VideoCallViewModel(
     val remoteVideoTrackFlow = webRtcClient.remoteVideoTrackFlow
     val localVideoTrackFlow = webRtcClient.localVideoTrackFlow
 
-    init {
+    fun onScreenReady() {
         webRtcClient.onSessionScreenReady()
     }
 

@@ -122,7 +122,10 @@ fun HomeScreen(
                     items(uiState.searchResults, key = { it.userId }) {
                         UserItem(
                             user = it,
-                            onInitiateCall = { onEvent(HomeScreenEvent.OnCallAction(it)) }
+                            onInitiateCall = {
+                                navController.navigate(Route.VideoCall)
+                                onEvent(HomeScreenEvent.OnCallAction(it))
+                            }
                         )
                         HorizontalDivider()
                     }

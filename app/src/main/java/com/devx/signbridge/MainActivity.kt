@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,26 +96,27 @@ fun SignBrideApp(startDestination: Route) {
             val viewModel = koinViewModel<HomeViewModel>()
             val uiState = viewModel.uiState.collectAsStateWithLifecycle()
 
+            HomeScreen(
+                uiState = uiState.value,
+                onEvent = viewModel::onEvent,
+                navController = navController
+            )
+        }
+        composable<Route.VideoCall> {
             val videoCallViewModel = koinViewModel<VideoCallViewModel>()
             val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
             val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
             val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
 
-            if(uiState.value.isOnCallScreen) {
-                VideoCallScreen(
-                    videoCallState = videoCallState,
-                    onEvent = videoCallViewModel::onEvent,
-                    remoteVideoTrackState = remoteVideoTrack,
-                    localVideoTrackState = localVideoTrack
-                )
-            } else {
-                HomeScreen(
-                    uiState = uiState.value,
-                    onEvent = viewModel::onEvent,
-                    navController = navController
-                )
-            }
+            VideoCallScreen(
+                videoCallState = videoCallState,
+                onEvent = videoCallViewModel::onEvent,
+                onScreenReady = videoCallViewModel::onScreenReady,
+                remoteVideoTrackState = remoteVideoTrack,
+                localVideoTrackState = localVideoTrack
+            )
         }
+
         composable<Route.SearchUser> {
             val viewModel = koinViewModel<SearchUserViewModel>()
             val uiState = viewModel.uiState.collectAsStateWithLifecycle()
@@ -136,6 +138,9 @@ sealed interface Route {
 
     @Serializable
     data object Home: Route
+
+    @Serializable
+    data object VideoCall: Route
 
     @Serializable
     data object SearchUser: Route
