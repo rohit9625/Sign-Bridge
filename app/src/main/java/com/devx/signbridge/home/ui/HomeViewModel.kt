@@ -1,5 +1,6 @@
 package com.devx.signbridge.home.ui
 
+import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -46,6 +47,10 @@ class HomeViewModel(
                 }
             }
             HomeScreenEvent.SignOut -> signOutUser()
+            is HomeScreenEvent.OnCallAction -> {
+                _uiState.update { it.copy(isOnCallScreen = true) }
+                Log.d("HomeScreenEvent", "[OnCallAction] : To ${e.callee.username}")
+            }
         }
     }
 

@@ -7,4 +7,5 @@ data class HomeUiState(
     val searchQuery: String = "",
     val searchResults: List<User> = emptyList(),
     val isSearching: Boolean = false,
+    val isOnCallScreen: Boolean = false
 )
