@@ -6,5 +6,5 @@ sealed interface HomeScreenEvent {
     data object SignOut: HomeScreenEvent
     data class OnQueryChange(val query: String): HomeScreenEvent
     data object OnSearchAction: HomeScreenEvent
-    data class OnCallAction(val callee: User): HomeScreenEvent
+    data class OnCallAction(val callee: User, val onSuccess: (callId: String) -> Unit): HomeScreenEvent
 }

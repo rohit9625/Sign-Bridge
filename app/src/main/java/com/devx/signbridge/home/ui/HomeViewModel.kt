@@ -8,6 +8,11 @@ import com.devx.signbridge.auth.domain.GoogleAuthClient
 import com.devx.signbridge.auth.domain.UserRepository
 import com.devx.signbridge.auth.domain.model.User
 import com.devx.signbridge.core.domain.model.Result
+import com.devx.signbridge.videocall.domain.CallRepository
+import com.devx.signbridge.videocall.domain.models.Call
+import com.devx.signbridge.videocall.domain.models.CallStatus
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +21,8 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val googleAuthClient: GoogleAuthClient,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val callRepository: CallRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState = _uiState.asStateFlow()
@@ -49,8 +55,31 @@ class HomeViewModel(
             HomeScreenEvent.SignOut -> signOutUser()
             is HomeScreenEvent.OnCallAction -> {
                 _uiState.update { it.copy(isOnCallScreen = true) }
+                viewModelScope.launch {
+                    initiateCall(calleeId = e.callee.userId, calleeName = e.callee.username) {
+                        e.onSuccess(it)
+                    }
+                }
                 Log.d("HomeScreenEvent", "[OnCallAction] : To ${e.callee.username}")
             }
+        }
+    }
+
+    suspend fun initiateCall(
+        calleeId: String,
+        calleeName: String,
+        onSuccess: (callId: String) -> Unit
+    ) {
+        googleAuthClient.getSignedInUser()?.let { user ->
+            val call = Call(
+                callerId = user.userId,
+                callerName = user.username,
+                calleeId = calleeId,
+                calleeName = calleeName,
+                status = CallStatus.CALLING
+            )
+            val callId = callRepository.createCall(call)
+            onSuccess(callId)
         }
     }
 

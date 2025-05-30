@@ -7,13 +7,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.devx.signbridge.auth.domain.GoogleAuthClient
 import com.devx.signbridge.auth.ui.CompleteProfileScreen
 import com.devx.signbridge.auth.ui.CompleteProfileViewModel
@@ -108,10 +108,12 @@ fun SignBrideApp(startDestination: Route) {
             val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
             val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
 
+            val params = it.toRoute<Route.VideoCall>()
+
             VideoCallScreen(
                 videoCallState = videoCallState,
                 onEvent = videoCallViewModel::onEvent,
-                onScreenReady = videoCallViewModel::onScreenReady,
+                onScreenReady = { videoCallViewModel.onCallInitiated(params.callId) },
                 remoteVideoTrackState = remoteVideoTrack,
                 localVideoTrackState = localVideoTrack
             )
@@ -140,7 +142,7 @@ sealed interface Route {
     data object Home: Route
 
     @Serializable
-    data object VideoCall: Route
+    data class VideoCall(val callId: String): Route
 
     @Serializable
     data object SearchUser: Route
