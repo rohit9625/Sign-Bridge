@@ -51,7 +51,6 @@ class MainActivity : ComponentActivity() {
                 SignBridgeTheme {
                     val startDestination = googleAuthClient.getSignedInUser()?.userId?.let { userId ->
                         currentUserId = userId
-                        userRepository.changeOnlineStatus(userId = userId, isOnline = true)
                         Route.Home
                     } ?: Route.Auth
                     SignBrideApp(startDestination = startDestination)

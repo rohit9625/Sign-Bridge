@@ -124,7 +124,7 @@ fun UserItem(
     onInitiateCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val statusColor = if(user.isOnline) Color.Green else Color.Red
+    val statusColor = if(user.online) Color.Green else Color.Red
 
     Card(
         modifier = modifier.fillMaxWidth(),

@@ -28,6 +28,12 @@ class HomeViewModel(
     val uiState = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+    private var currentUserId: String? = null
+
+    init {
+        currentUserId = googleAuthClient.getSignedInUser()?.userId
+        userRepository.changeOnlineStatus(currentUserId!!, isOnline = true)
+    }
 
     fun onEvent(e: HomeScreenEvent) {
         when (e) {
