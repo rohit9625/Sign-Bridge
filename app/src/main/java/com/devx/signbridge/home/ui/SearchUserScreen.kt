@@ -1,6 +1,7 @@
 package com.devx.signbridge.home.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -122,6 +124,8 @@ fun UserItem(
     onInitiateCall: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val statusColor = if(user.isOnline) Color.Green else Color.Red
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -134,25 +138,33 @@ fun UserItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            SubcomposeAsyncImage(
-                model = user.profilePictureUrl,
-                contentDescription = stringResource(R.string.profile_picture),
-                contentScale = ContentScale.Crop,
-                loading = {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                error = {
-                    Image(
-                        painter = painterResource(R.drawable.default_profile_image),
-                        contentDescription = stringResource(R.string.profile_picture)
-                    )
-                },
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-            )
+            Box {
+                SubcomposeAsyncImage(
+                    model = user.profilePictureUrl,
+                    contentDescription = stringResource(R.string.profile_picture),
+                    contentScale = ContentScale.Crop,
+                    loading = {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    error = {
+                        Image(
+                            painter = painterResource(R.drawable.default_profile_image),
+                            contentDescription = stringResource(R.string.profile_picture)
+                        )
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                )
+                Box(
+                    modifier = Modifier.size(12.dp)
+                        .clip(CircleShape)
+                        .background(statusColor)
+                        .align(Alignment.BottomEnd)
+                )
+            }
             Column {
                 Text(text = user.username, style = MaterialTheme.typography.titleMedium)
                 Text(text = user.email, style = MaterialTheme.typography.bodySmall)

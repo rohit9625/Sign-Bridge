@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.devx.signbridge.auth.domain.GoogleAuthClient
+import com.devx.signbridge.auth.domain.UserRepository
 import com.devx.signbridge.auth.ui.CompleteProfileScreen
 import com.devx.signbridge.auth.ui.CompleteProfileViewModel
 import com.devx.signbridge.auth.ui.SignInScreen
@@ -34,6 +35,8 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
+    private val userRepository: UserRepository by inject<UserRepository>()
+    private lateinit var currentUserId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,11 +49,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompositionLocalProvider(LocalWebRtcClient provides sessionManager) {
                 SignBridgeTheme {
-                    val startDestination = if(googleAuthClient.getSignedInUser() != null) Route.Home else Route.Auth
+                    val startDestination = googleAuthClient.getSignedInUser()?.userId?.let { userId ->
+                        currentUserId = userId
+                        userRepository.changeOnlineStatus(userId = userId, isOnline = true)
+                        Route.Home
+                    } ?: Route.Auth
                     SignBrideApp(startDestination = startDestination)
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Set user is Offline
+        userRepository.changeOnlineStatus(userId = currentUserId, isOnline = false)
     }
 }
 

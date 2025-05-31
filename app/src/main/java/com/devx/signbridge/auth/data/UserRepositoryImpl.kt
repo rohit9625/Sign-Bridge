@@ -37,6 +37,22 @@ class UserRepositoryImpl: UserRepository {
         }
     }
 
+    override fun changeOnlineStatus(userId: String, isOnline: Boolean) {
+        try {
+            db.collection("users").document(userId)
+                .update("isOnline", isOnline)
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        Log.d(TAG, "Successfully updated online status")
+                    } else {
+                        Log.e(TAG, "Error updating online status", it.exception)
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Internal Error", e)
+        }
+    }
+
     override suspend fun getUserDetails(userId: String): Result<User, DatabaseError> {
         TODO("Not yet implemented")
     }
