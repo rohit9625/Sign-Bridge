@@ -5,6 +5,7 @@ import com.devx.signbridge.videocall.domain.CallRepository
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class VideoCallViewModel(
@@ -18,7 +19,8 @@ class VideoCallViewModel(
     val remoteVideoTrackFlow = webRtcClient.remoteVideoTrackFlow
     val localVideoTrackFlow = webRtcClient.localVideoTrackFlow
 
-    private var isCallActive = false
+    private val _isCallActive = MutableStateFlow(false)
+    val isCallActive: StateFlow<Boolean> = _isCallActive.asStateFlow()
 
     init {
         webRtcClient.signalingClient.startIceCandidateListener(currentCallId)
@@ -43,6 +45,10 @@ class VideoCallViewModel(
             }
             VideoCallEvent.EndCall -> dispose()
         }
+    }
+
+    fun answerCall() {
+        _isCallActive.update { true }
     }
 
     fun dispose() {

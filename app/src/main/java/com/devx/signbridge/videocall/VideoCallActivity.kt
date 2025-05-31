@@ -68,14 +68,15 @@ class VideoCallActivity: ComponentActivity() {
                         val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
                         val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
                         val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
+                        val isCallActive by videoCallViewModel.isCallActive.collectAsStateWithLifecycle()
 
-                        if(isIncomingCall) {
+                        if(isIncomingCall && !isCallActive) {
                             IncomingCallScreen(
                                 callerName = callerName,
-                                callerEmail = "rv17837@gmail.com",
+                                callerEmail = "",
                                 callerAvatarUrl = callerAvatar,
                                 onAnswerCall = {
-                                    // TODO("Handle incoming call")
+                                    videoCallViewModel.answerCall()
                                 },
                                 onDeclineCall = {
                                     videoCallViewModel.dispose()
