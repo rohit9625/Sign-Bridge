@@ -31,6 +31,7 @@ import com.devx.signbridge.webrtc.data.LocalWebRtcClient
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
+import org.koin.android.scope.createScope
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -42,7 +43,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO), 0)
-        val googleAuthClient: GoogleAuthClient by inject()
+        val googleAuthClient: GoogleAuthClient by inject() {
+            parametersOf(this)
+        }
         val sessionManager: WebRtcClient by inject<WebRtcClient>()
 
         enableEdgeToEdge()
@@ -59,6 +62,101 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Composable
+    fun SignBrideApp(startDestination: Route) {
+        val navController = rememberNavController()
+
+        NavHost(navController = navController, startDestination = startDestination) {
+            composable<Route.Auth> {
+                val viewModel = koinViewModel<SignInViewModel>() {
+                    parametersOf(this@MainActivity)
+                }
+                val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+                SignInScreen(
+                    uiState = uiState.value,
+                    onEvent = viewModel::onEvent,
+                    onSuccess = { route ->
+                        navController.navigate(route) {
+                            if (route == Route.Home) {
+                                popUpTo(Route.Auth) {
+                                    inclusive = true
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+            composable<Route.CompleteProfile> {
+                val viewModel = koinViewModel<CompleteProfileViewModel>() {
+                    parametersOf(this@MainActivity)
+                }
+                val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+                CompleteProfileScreen(
+                    uiState = uiState.value,
+                    onEvent = viewModel::onEvent,
+                    onContinue = {
+                        navController.navigate(Route.Home) {
+                            popUpTo(Route.Auth) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                )
+            }
+            composable<Route.Home> {
+                val viewModel = koinViewModel<HomeViewModel>() {
+                    parametersOf(this@MainActivity)
+                }
+                val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+                HomeScreen(
+                    uiState = uiState.value,
+                    onEvent = viewModel::onEvent,
+                    navController = navController
+                )
+            }
+            composable<Route.VideoCall> {
+                val params = it.toRoute<Route.VideoCall>()
+                val videoCallViewModel = koinViewModel<VideoCallViewModel>(
+                    parameters = { parametersOf(params.callId) }
+                )
+                val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
+                val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
+                val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
+
+
+                VideoCallScreen(
+                    videoCallState = videoCallState,
+                    onEvent = videoCallViewModel::onEvent,
+                    onScreenReady = videoCallViewModel::onCallInitiated,
+                    remoteVideoTrackState = remoteVideoTrack,
+                    localVideoTrackState = localVideoTrack
+                )
+            }
+
+            composable<Route.SearchUser> {
+                val viewModel = koinViewModel<SearchUserViewModel>()
+                val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
+                SearchUserScreen(
+                    uiState = uiState.value,
+                    onEvent = viewModel::onEvent
+                )
+            }
+        }
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun GreetingPreview() {
+        SignBridgeTheme {
+            SignBrideApp(
+                startDestination = Route.Home
+            )
+        }
+    }
     override fun onDestroy() {
         super.onDestroy()
         // Set user is Offline
@@ -66,87 +164,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun SignBrideApp(startDestination: Route) {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = startDestination) {
-        composable<Route.Auth> {
-            val viewModel = koinViewModel<SignInViewModel>()
-            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-
-            SignInScreen(
-                uiState = uiState.value,
-                onEvent = viewModel::onEvent,
-                onSuccess = { route ->
-                    navController.navigate(route) {
-                        if (route == Route.Home) {
-                            popUpTo(Route.Auth) {
-                                inclusive = true
-                            }
-                        }
-                    }
-                }
-            )
-        }
-        composable<Route.CompleteProfile> {
-            val viewModel = koinViewModel<CompleteProfileViewModel>()
-            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-
-            CompleteProfileScreen(
-                uiState = uiState.value,
-                onEvent = viewModel::onEvent,
-                onContinue = {
-                    navController.navigate(Route.Home) {
-                        popUpTo(Route.Auth) {
-                            inclusive = true
-                        }
-                    }
-                }
-            )
-        }
-        composable<Route.Home> {
-            val viewModel = koinViewModel<HomeViewModel>()
-            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-
-            HomeScreen(
-                uiState = uiState.value,
-                onEvent = viewModel::onEvent,
-                navController = navController
-            )
-        }
-        composable<Route.VideoCall> {
-            val params = it.toRoute<Route.VideoCall>()
-            val videoCallViewModel = koinViewModel<VideoCallViewModel>(
-                parameters = { parametersOf(params.callId) }
-            )
-            val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
-            val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
-            val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
-
-
-            VideoCallScreen(
-                videoCallState = videoCallState,
-                onEvent = videoCallViewModel::onEvent,
-                onScreenReady = videoCallViewModel::onCallInitiated,
-                remoteVideoTrackState = remoteVideoTrack,
-                localVideoTrackState = localVideoTrack
-            )
-        }
-
-        composable<Route.SearchUser> {
-            val viewModel = koinViewModel<SearchUserViewModel>()
-            val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-
-            SearchUserScreen(
-                uiState = uiState.value,
-                onEvent = viewModel::onEvent
-            )
-        }
-    }
-}
-
 sealed interface Route {
+
     @Serializable
     data object Auth: Route
 
@@ -158,17 +177,6 @@ sealed interface Route {
 
     @Serializable
     data class VideoCall(val callId: String): Route
-
     @Serializable
     data object SearchUser: Route
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SignBridgeTheme {
-        SignBrideApp(
-            startDestination = Route.Home
-        )
-    }
 }

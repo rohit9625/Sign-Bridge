@@ -1,6 +1,9 @@
 package com.devx.signbridge.core.di
 
+import android.content.Context
+import androidx.activity.ComponentActivity
 import androidx.credentials.CredentialManager
+import com.devx.signbridge.MainActivity
 import com.devx.signbridge.auth.data.UserRepositoryImpl
 import com.devx.signbridge.auth.domain.GoogleAuthClient
 import com.devx.signbridge.auth.domain.UserRepository
@@ -22,7 +25,9 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { CredentialManager.create(androidContext()) }
-    single { GoogleAuthClient(context = androidContext(), credentialManager = get()) }
+    single { (activityCtx: Context) ->
+        GoogleAuthClient(context = activityCtx, credentialManager = get())
+    }
     single<UserRepository> { UserRepositoryImpl() }
     single<CallRepository> { CallRepositoryImpl() }
     single { SignalingClient() }
@@ -35,9 +40,15 @@ val appModule = module {
         )
     }
 
-    viewModel { SignInViewModel(googleAuthClient = get(), userRepository = get()) }
-    viewModel { CompleteProfileViewModel(googleAuthClient = get(), userRepository = get()) }
-    viewModel { HomeViewModel(googleAuthClient = get(), userRepository = get(), callRepository = get()) }
+    viewModel { (activityCtx: Context) ->
+        SignInViewModel(googleAuthClient = get { parametersOf(activityCtx) }, userRepository = get())
+    }
+    viewModel { (activityCtx: Context) ->
+        CompleteProfileViewModel(googleAuthClient = get { parametersOf(activityCtx) }, userRepository = get())
+    }
+    viewModel { (activityCtx: Context) ->
+        HomeViewModel(googleAuthClient = get { parametersOf(activityCtx) }, userRepository = get(), callRepository = get())
+    }
     viewModel { SearchUserViewModel(userRepository = get()) }
     viewModel { (callId: String) ->
         VideoCallViewModel(webRtcClient = get { parametersOf(callId) }, currentCallId = callId)
