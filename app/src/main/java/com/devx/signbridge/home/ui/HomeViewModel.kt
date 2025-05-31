@@ -1,5 +1,6 @@
 package com.devx.signbridge.home.ui
 
+import android.nfc.Tag
 import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
@@ -10,9 +11,8 @@ import com.devx.signbridge.auth.domain.model.User
 import com.devx.signbridge.core.domain.model.Result
 import com.devx.signbridge.videocall.domain.CallRepository
 import com.devx.signbridge.videocall.domain.models.Call
+import com.devx.signbridge.videocall.domain.models.CallState
 import com.devx.signbridge.videocall.domain.models.CallStatus
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +33,18 @@ class HomeViewModel(
     init {
         currentUserId = googleAuthClient.getSignedInUser()?.userId
         userRepository.changeOnlineStatus(currentUserId!!, isOnline = true)
+        viewModelScope.launch {
+            callRepository.listenForIncomingCalls(this, currentUserId!!).collect {
+                when (it) {
+                    is CallState.IncomingCall -> {
+                        Log.d(TAG, "Incoming Call: ${it.call}")
+                    }
+                    else -> {
+                        Log.d(TAG, "Other Call State: $it")
+                    }
+                }
+            }
+        }
     }
 
     fun onEvent(e: HomeScreenEvent) {
@@ -144,5 +156,9 @@ class HomeViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isUserSignedOut = googleAuthClient.signOut()) }
         }
+    }
+
+    companion object {
+        private const val TAG = "HomeViewModel"
     }
 }
