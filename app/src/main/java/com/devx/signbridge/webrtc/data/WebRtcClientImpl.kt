@@ -47,9 +47,10 @@ class WebRtcClientImpl(
     private val sessionManagerScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private var offer: String? = null
+    private lateinit var currentCallId: String
 
     // used to send local video track to the fragment
-    private val _localVideoTrackFlow = MutableSharedFlow<VideoTrack>()
+    private val _localVideoTrackFlow = MutableSharedFlow<VideoTrack>(replay = 1)
     override val localVideoTrackFlow: SharedFlow<VideoTrack> = _localVideoTrackFlow
 
     // used to send remote video track to the sender
@@ -125,8 +126,9 @@ class WebRtcClientImpl(
             mediaConstraints = mediaConstraints,
             onIceCandidateRequest = { iceCandidate, _ ->
                 signalingClient.sendCommand(
-                    SignalingClient.SignalingCommand.ICE,
-                    "${iceCandidate.sdpMid}$ICE_SEPARATOR${iceCandidate.sdpMLineIndex}$ICE_SEPARATOR${iceCandidate.sdp}"
+                    callId = currentCallId,
+                    signalingCommand = SignalingClient.SignalingCommand.ICE,
+                    sdpDescription = "${iceCandidate.sdpMid}$ICE_SEPARATOR${iceCandidate.sdpMLineIndex}$ICE_SEPARATOR${iceCandidate.sdp}"
                 )
             },
             onVideoTrack = { rtpTransceiver ->
@@ -160,6 +162,7 @@ class WebRtcClientImpl(
         val result = peerConnection.setLocalDescription(offer)
         result.onSuccess {
             signalingClient.sendCommand(
+                callId = currentCallId,
                 signalingCommand = SignalingClient.SignalingCommand.OFFER,
                 sdpDescription = offer.description
             )
@@ -174,7 +177,11 @@ class WebRtcClientImpl(
         val answer = peerConnection.createAnswer().getOrThrow()
         val result = peerConnection.setLocalDescription(answer)
         result.onSuccess {
-            signalingClient.sendCommand(SignalingClient.SignalingCommand.ANSWER, answer.description)
+            signalingClient.sendCommand(
+                callId = currentCallId,
+                signalingCommand = SignalingClient.SignalingCommand.ANSWER,
+                sdpDescription = answer.description
+            )
         }
         Log.d(TAG, "[SDP] send answer: ${answer.stringify()}")
     }
@@ -203,8 +210,9 @@ class WebRtcClientImpl(
         Log.d(TAG, "[SDP] handle ice: $iceDescription")
     }
 
-    override fun onSessionScreenReady() {
+    override fun onCallScreenReady(callId: String) {
         setupAudio()
+        currentCallId = callId
         peerConnection.connection.addTrack(localVideoTrack)
         peerConnection.connection.addTrack(localAudioTrack)
         sessionManagerScope.launch {

@@ -27,12 +27,12 @@ fun VideoRenderer(
         }
     }
 
-    val sessionManager = LocalWebRtcClient.current
+    val webRtcClient = LocalWebRtcClient.current
     AndroidView(
         factory = { context ->
             VideoTextureViewRenderer(context).apply {
                 init(
-                    sessionManager.peerConnectionFactory.eglBaseContext,
+                    webRtcClient.peerConnectionFactory.eglBaseContext,
                     object : RendererCommon.RendererEvents {
                         override fun onFirstFrameRendered() = Unit
 

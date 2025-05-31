@@ -31,14 +31,15 @@ import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
-    val googleAuthClient: GoogleAuthClient by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO), 0)
+        val googleAuthClient: GoogleAuthClient by inject()
         val sessionManager: WebRtcClient by inject<WebRtcClient>()
 
         enableEdgeToEdge()
@@ -103,17 +104,19 @@ fun SignBrideApp(startDestination: Route) {
             )
         }
         composable<Route.VideoCall> {
-            val videoCallViewModel = koinViewModel<VideoCallViewModel>()
+            val params = it.toRoute<Route.VideoCall>()
+            val videoCallViewModel = koinViewModel<VideoCallViewModel>(
+                parameters = { parametersOf(params.callId) }
+            )
             val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
             val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
             val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
 
-            val params = it.toRoute<Route.VideoCall>()
 
             VideoCallScreen(
                 videoCallState = videoCallState,
                 onEvent = videoCallViewModel::onEvent,
-                onScreenReady = { videoCallViewModel.onCallInitiated(params.callId) },
+                onScreenReady = videoCallViewModel::onCallInitiated,
                 remoteVideoTrackState = remoteVideoTrack,
                 localVideoTrackState = localVideoTrack
             )

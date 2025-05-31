@@ -1,7 +1,6 @@
 package com.devx.signbridge.videocall.ui
 
 import androidx.lifecycle.ViewModel
-import com.devx.signbridge.videocall.domain.CallRepository
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +8,7 @@ import kotlinx.coroutines.flow.update
 
 class VideoCallViewModel(
     private val webRtcClient: WebRtcClient,
-    private val callRepository: CallRepository
+    private val currentCallId: String
 ): ViewModel() {
     private val _videoCallState = MutableStateFlow(VideoCallState())
     val videoCallState: StateFlow<VideoCallState> = _videoCallState
@@ -17,12 +16,14 @@ class VideoCallViewModel(
     val remoteVideoTrackFlow = webRtcClient.remoteVideoTrackFlow
     val localVideoTrackFlow = webRtcClient.localVideoTrackFlow
 
-    private var currentCallId: String? = null
     private var isCallActive = false
 
-    fun onCallInitiated(callId: String) {
-        currentCallId = callId
-        webRtcClient.onSessionScreenReady()
+    init {
+        webRtcClient.signalingClient.startIceCandidateListener(currentCallId)
+    }
+
+    fun onCallInitiated() {
+        webRtcClient.onCallScreenReady(currentCallId)
     }
 
     fun onEvent(e: VideoCallEvent) {

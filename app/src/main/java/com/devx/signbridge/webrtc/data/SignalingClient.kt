@@ -26,13 +26,10 @@ class SignalingClient {
     val signalingCommandFlow: SharedFlow<Pair<SignalingCommand, SDPDescription>> = _signalingCommandFlow
 
     private var listenerRegistration: ListenerRegistration? = null
-    private val iceCandidatesRef = db.collection("ice_candidates")
 
-    init {
-        listenForIncomingMessages()
-    }
-
-    private fun listenForIncomingMessages() {
+    fun startIceCandidateListener(callId: String) {
+        listenerRegistration?.remove()
+        val iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
         listenerRegistration = iceCandidatesRef.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) return@addSnapshotListener
 
@@ -47,12 +44,13 @@ class SignalingClient {
                 }
 
                 // Optional: Clean up message after receiving
-                 docChange.document.reference.delete()
+                // docChange.document.reference.delete()
             }
         }
     }
 
     fun sendCommand(
+        callId: String,
         signalingCommand: SignalingCommand,
         sdpDescription: String
     ) {
@@ -60,6 +58,7 @@ class SignalingClient {
             "type" to signalingCommand.name,
             "sdpDescription" to sdpDescription
         )
+        val iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
 
         iceCandidatesRef.add(message).addOnCompleteListener {
             if (it.isSuccessful) {

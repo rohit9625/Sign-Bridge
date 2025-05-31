@@ -14,7 +14,7 @@ interface WebRtcClient {
 
     val remoteVideoTrackFlow: SharedFlow<VideoTrack>
 
-    fun onSessionScreenReady()
+    fun onCallScreenReady(callId: String)
 
     fun flipCamera()
 
