@@ -38,12 +38,14 @@ import androidx.navigation.compose.rememberNavController
 import com.devx.signbridge.R
 import com.devx.signbridge.Route
 import com.devx.signbridge.ui.theme.SignBridgeTheme
+import com.devx.signbridge.videocall.domain.models.Call
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     uiState: HomeUiState,
     onEvent: (HomeScreenEvent) -> Unit,
+    onStartVideoCall: (call: Call) -> Unit,
     navController: NavController
 ) {
     LaunchedEffect(uiState.isUserSignedOut) {
@@ -58,7 +60,7 @@ fun HomeScreen(
 
     LaunchedEffect(uiState.incomingCall) {
         uiState.incomingCall?.let {
-            navController.navigate(Route.VideoCall(callId = it.id, isIncomingCall = true))
+//            navController.navigate(Route.VideoCall(callId = it.id, isIncomingCall = true))
         }
     }
 
@@ -129,8 +131,8 @@ fun HomeScreen(
                         UserItem(
                             user = it,
                             onInitiateCall = {
-                                onEvent(HomeScreenEvent.OnCallAction(it) { callId ->
-                                    navController.navigate(Route.VideoCall(callId))
+                                onEvent(HomeScreenEvent.OnCallAction(it) { call ->
+                                    onStartVideoCall(call)
                                 })
                             }
                         )
@@ -159,7 +161,8 @@ private fun HomeScreenPreview() {
         HomeScreen(
             uiState = HomeUiState(),
             onEvent = { },
-            navController = rememberNavController()
+            navController = rememberNavController(),
+            onStartVideoCall = { _ -> }
         )
     }
 }

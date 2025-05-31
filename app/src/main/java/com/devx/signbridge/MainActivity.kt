@@ -6,14 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import com.devx.signbridge.auth.domain.GoogleAuthClient
 import com.devx.signbridge.auth.domain.UserRepository
 import com.devx.signbridge.auth.ui.CompleteProfileScreen
@@ -25,11 +22,8 @@ import com.devx.signbridge.home.ui.HomeViewModel
 import com.devx.signbridge.home.ui.SearchUserScreen
 import com.devx.signbridge.home.ui.SearchUserViewModel
 import com.devx.signbridge.ui.theme.SignBridgeTheme
-import com.devx.signbridge.videocall.ui.IncomingCallScreen
-import com.devx.signbridge.videocall.ui.VideoCallScreen
-import com.devx.signbridge.videocall.ui.VideoCallViewModel
-import com.devx.signbridge.webrtc.data.LocalWebRtcClient
-import com.devx.signbridge.webrtc.domain.WebRtcClient
+import com.devx.signbridge.videocall.VideoCallActivity
+import com.devx.signbridge.videocall.domain.models.Call
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
@@ -46,20 +40,28 @@ class MainActivity : ComponentActivity() {
         val googleAuthClient: GoogleAuthClient by inject {
             parametersOf(this)
         }
-        val sessionManager: WebRtcClient by inject<WebRtcClient>()
 
         enableEdgeToEdge()
         setContent {
-            CompositionLocalProvider(LocalWebRtcClient provides sessionManager) {
-                SignBridgeTheme {
-                    val startDestination = googleAuthClient.getSignedInUser()?.userId?.let { userId ->
-                        currentUserId = userId
-                        Route.Home
-                    } ?: Route.Auth
-                    SignBrideApp(startDestination = startDestination)
-                }
+            SignBridgeTheme {
+                val startDestination = googleAuthClient.getSignedInUser()?.userId?.let { userId ->
+                    currentUserId = userId
+                    Route.Home
+                } ?: Route.Auth
+                SignBrideApp(startDestination = startDestination)
             }
         }
+    }
+
+    fun startVideoCall(call: Call) {
+        val intent = VideoCallActivity.createIntent(
+            context = applicationContext,
+            callId = call.id,
+            callerName = call.callerName,
+            callerAvatar = null,
+            isIncomingCall = false
+        )
+        startActivity(intent)
     }
 
     @Composable
@@ -114,39 +116,9 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(
                     uiState = uiState.value,
                     onEvent = viewModel::onEvent,
+                    onStartVideoCall = { startVideoCall(it) },
                     navController = navController
                 )
-            }
-            composable<Route.VideoCall> {
-                val params = it.toRoute<Route.VideoCall>()
-                val videoCallViewModel = koinViewModel<VideoCallViewModel>(
-                    parameters = { parametersOf(params.callId) }
-                )
-                val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
-                val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
-                val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
-
-                if(params.isIncomingCall) {
-                    IncomingCallScreen(
-                        callerName = "Rohit Verma",
-                        callerEmail = "rv17837@gmail.com",
-                        callerAvatarUrl = null,
-                        onAnswerCall = {
-                            // TODO("Handle incoming call")
-                        },
-                        onDeclineCall = {
-                            // TODO("Reject incoming call")
-                        }
-                    )
-                } else {
-                    VideoCallScreen(
-                        videoCallState = videoCallState,
-                        onEvent = videoCallViewModel::onEvent,
-                        onScreenReady = videoCallViewModel::onCallInitiated,
-                        remoteVideoTrackState = remoteVideoTrack,
-                        localVideoTrackState = localVideoTrack
-                    )
-                }
             }
 
             composable<Route.SearchUser> {
@@ -188,8 +160,6 @@ sealed interface Route {
     @Serializable
     data object Home: Route
 
-    @Serializable
-    data class VideoCall(val callId: String, val isIncomingCall: Boolean = false): Route
     @Serializable
     data object SearchUser: Route
 }

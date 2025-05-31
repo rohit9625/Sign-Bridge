@@ -1,6 +1,5 @@
 package com.devx.signbridge.home.ui
 
-import android.nfc.Tag
 import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
@@ -76,7 +75,7 @@ class HomeViewModel(
                 _uiState.update { it.copy(isOnCallScreen = true) }
                 viewModelScope.launch {
                     initiateCall(calleeId = e.callee.userId, calleeName = e.callee.username) {
-                        e.onSuccess(it)
+                        e.onCallCreated(it)
                     }
                 }
                 Log.d("HomeScreenEvent", "[OnCallAction] : To ${e.callee.username}")
@@ -87,7 +86,7 @@ class HomeViewModel(
     suspend fun initiateCall(
         calleeId: String,
         calleeName: String,
-        onSuccess: (callId: String) -> Unit
+        onCallCreated: (call: Call) -> Unit
     ) {
         googleAuthClient.getSignedInUser()?.let { user ->
             val call = Call(
@@ -98,7 +97,7 @@ class HomeViewModel(
                 status = CallStatus.CALLING
             )
             val callId = callRepository.createCall(call)
-            onSuccess(callId)
+            onCallCreated(call.copy(id = callId))
         }
     }
 
