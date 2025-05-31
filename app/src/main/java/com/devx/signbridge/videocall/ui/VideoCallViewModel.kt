@@ -1,6 +1,7 @@
 package com.devx.signbridge.videocall.ui
 
 import androidx.lifecycle.ViewModel
+import com.devx.signbridge.videocall.domain.CallRepository
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -8,7 +9,8 @@ import kotlinx.coroutines.flow.update
 
 class VideoCallViewModel(
     private val webRtcClient: WebRtcClient,
-    private val currentCallId: String
+    private val currentCallId: String,
+    private val callRepository: CallRepository
 ): ViewModel() {
     private val _videoCallState = MutableStateFlow(VideoCallState())
     val videoCallState: StateFlow<VideoCallState> = _videoCallState
@@ -39,10 +41,12 @@ class VideoCallViewModel(
             VideoCallEvent.SwitchCamera -> {
                 webRtcClient.flipCamera()
             }
-            VideoCallEvent.EndCall -> {
-                webRtcClient.disconnect()
-                _videoCallState.update { VideoCallState() }
-            }
+            VideoCallEvent.EndCall -> dispose()
         }
+    }
+
+    fun dispose() {
+        callRepository.deleteCall(currentCallId)
+        webRtcClient.disconnect()
     }
 }

@@ -11,5 +11,7 @@ interface CallRepository {
 
     suspend fun updateCall(callId: String, updates: Map<String, Any>)
 
+    fun deleteCall(callId: String)
+
     fun listenForIncomingCalls(scope: CoroutineScope, currentUserId: String): Flow<CallState>
 }

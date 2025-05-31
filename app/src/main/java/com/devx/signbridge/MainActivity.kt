@@ -53,13 +53,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    fun startVideoCall(call: Call) {
+    fun startVideoCall(call: Call, isIncomingCall: Boolean) {
         val intent = VideoCallActivity.createIntent(
             context = applicationContext,
             callId = call.id,
             callerName = call.callerName,
             callerAvatar = null,
-            isIncomingCall = false
+            isIncomingCall = isIncomingCall
         )
         startActivity(intent)
     }
@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
                 HomeScreen(
                     uiState = uiState.value,
                     onEvent = viewModel::onEvent,
-                    onStartVideoCall = { startVideoCall(it) },
+                    onStartVideoCall = ::startVideoCall,
                     navController = navController
                 )
             }

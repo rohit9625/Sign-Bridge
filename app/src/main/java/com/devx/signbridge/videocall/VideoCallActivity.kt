@@ -78,6 +78,7 @@ class VideoCallActivity: ComponentActivity() {
                                     // TODO("Handle incoming call")
                                 },
                                 onDeclineCall = {
+                                    videoCallViewModel.dispose()
                                     handleCallEnded()
                                 }
                             )

@@ -45,7 +45,7 @@ import com.devx.signbridge.videocall.domain.models.Call
 fun HomeScreen(
     uiState: HomeUiState,
     onEvent: (HomeScreenEvent) -> Unit,
-    onStartVideoCall: (call: Call) -> Unit,
+    onStartVideoCall: (call: Call, isIncomingCall: Boolean) -> Unit,
     navController: NavController
 ) {
     LaunchedEffect(uiState.isUserSignedOut) {
@@ -60,7 +60,7 @@ fun HomeScreen(
 
     LaunchedEffect(uiState.incomingCall) {
         uiState.incomingCall?.let {
-//            navController.navigate(Route.VideoCall(callId = it.id, isIncomingCall = true))
+            onStartVideoCall(it, true)
         }
     }
 
@@ -132,7 +132,7 @@ fun HomeScreen(
                             user = it,
                             onInitiateCall = {
                                 onEvent(HomeScreenEvent.OnCallAction(it) { call ->
-                                    onStartVideoCall(call)
+                                    onStartVideoCall(call, false)
                                 })
                             }
                         )
@@ -162,7 +162,7 @@ private fun HomeScreenPreview() {
             uiState = HomeUiState(),
             onEvent = { },
             navController = rememberNavController(),
-            onStartVideoCall = { _ -> }
+            onStartVideoCall = { _, _ -> }
         )
     }
 }

@@ -7,5 +7,5 @@ sealed class CallState {
     data class IncomingCall(val call: Call) : CallState()
     object Connecting : CallState()
     data class Connected(val callId: String) : CallState()
-    data class Error(val message: String) : CallState()
+    data object CallEnded : CallState()
 }

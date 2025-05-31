@@ -29,8 +29,17 @@ class CallRepositoryImpl: CallRepository {
         val listener = Firebase.firestore.collection("calls")
             .whereEqualTo("calleeId", currentUserId)
             .limit(1) // Should look for one call at a time
-            .addSnapshotListener { snapshots, _ ->
+            .addSnapshotListener { snapshots, error ->
+                if(error != null && snapshots == null) {
+                    Log.e(TAG, "Error listening for incoming calls", error)
+                    return@addSnapshotListener
+                }
+
                 for (doc in snapshots?.documents ?: emptyList()) {
+                    if (doc != null && !doc.exists()) {
+                        Log.w(TAG, "Document Doesn't Exists :(")
+                        trySend(CallState.CallEnded)
+                    }
                     Log.d(TAG, "New Doc Change: ${doc.id}")
                     doc.toObject<Call>()?.let { call ->
                         trySend(CallState.IncomingCall(call))
@@ -51,6 +60,23 @@ class CallRepositoryImpl: CallRepository {
             .document(callId)
             .update(updates)
             .await()
+    }
+
+    override fun deleteCall(callId: String) {
+        try {
+            db.collection("calls")
+                .document(callId)
+                .delete()
+                .addOnCompleteListener {
+                    if(it.isSuccessful) {
+                        Log.d(TAG, "Call deleted successfully")
+                    } else {
+                        Log.e(TAG, "Call deletion failed", it.exception)
+                    }
+                }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting call: $e")
+        }
     }
 
     companion object {

@@ -51,6 +51,6 @@ val appModule = module {
     }
     viewModel { SearchUserViewModel(userRepository = get()) }
     viewModel { (callId: String) ->
-        VideoCallViewModel(webRtcClient = get { parametersOf(callId) }, currentCallId = callId)
+        VideoCallViewModel(webRtcClient = get { parametersOf(callId) }, currentCallId = callId, callRepository = get())
     }
 }
