@@ -25,13 +25,13 @@ import com.devx.signbridge.home.ui.HomeViewModel
 import com.devx.signbridge.home.ui.SearchUserScreen
 import com.devx.signbridge.home.ui.SearchUserViewModel
 import com.devx.signbridge.ui.theme.SignBridgeTheme
+import com.devx.signbridge.videocall.ui.IncomingCallScreen
 import com.devx.signbridge.videocall.ui.VideoCallScreen
 import com.devx.signbridge.videocall.ui.VideoCallViewModel
 import com.devx.signbridge.webrtc.data.LocalWebRtcClient
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import kotlinx.serialization.Serializable
 import org.koin.android.ext.android.inject
-import org.koin.android.scope.createScope
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         requestPermissions(arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO), 0)
-        val googleAuthClient: GoogleAuthClient by inject() {
+        val googleAuthClient: GoogleAuthClient by inject {
             parametersOf(this)
         }
         val sessionManager: WebRtcClient by inject<WebRtcClient>()
@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController = navController, startDestination = startDestination) {
             composable<Route.Auth> {
-                val viewModel = koinViewModel<SignInViewModel>() {
+                val viewModel = koinViewModel<SignInViewModel> {
                     parametersOf(this@MainActivity)
                 }
                 val uiState = viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable<Route.CompleteProfile> {
-                val viewModel = koinViewModel<CompleteProfileViewModel>() {
+                val viewModel = koinViewModel<CompleteProfileViewModel> {
                     parametersOf(this@MainActivity)
                 }
                 val uiState = viewModel.uiState.collectAsStateWithLifecycle()
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
                 )
             }
             composable<Route.Home> {
-                val viewModel = koinViewModel<HomeViewModel>() {
+                val viewModel = koinViewModel<HomeViewModel> {
                     parametersOf(this@MainActivity)
                 }
                 val uiState = viewModel.uiState.collectAsStateWithLifecycle()
@@ -126,14 +126,27 @@ class MainActivity : ComponentActivity() {
                 val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)
                 val localVideoTrack by videoCallViewModel.localVideoTrackFlow.collectAsStateWithLifecycle(null)
 
-
-                VideoCallScreen(
-                    videoCallState = videoCallState,
-                    onEvent = videoCallViewModel::onEvent,
-                    onScreenReady = videoCallViewModel::onCallInitiated,
-                    remoteVideoTrackState = remoteVideoTrack,
-                    localVideoTrackState = localVideoTrack
-                )
+                if(params.isIncomingCall) {
+                    IncomingCallScreen(
+                        callerName = "Rohit Verma",
+                        callerEmail = "rv17837@gmail.com",
+                        callerAvatarUrl = null,
+                        onAnswerCall = {
+                            // TODO("Handle incoming call")
+                        },
+                        onDeclineCall = {
+                            // TODO("Reject incoming call")
+                        }
+                    )
+                } else {
+                    VideoCallScreen(
+                        videoCallState = videoCallState,
+                        onEvent = videoCallViewModel::onEvent,
+                        onScreenReady = videoCallViewModel::onCallInitiated,
+                        remoteVideoTrackState = remoteVideoTrack,
+                        localVideoTrackState = localVideoTrack
+                    )
+                }
             }
 
             composable<Route.SearchUser> {
@@ -176,7 +189,7 @@ sealed interface Route {
     data object Home: Route
 
     @Serializable
-    data class VideoCall(val callId: String): Route
+    data class VideoCall(val callId: String, val isIncomingCall: Boolean = false): Route
     @Serializable
     data object SearchUser: Route
 }

@@ -56,6 +56,12 @@ fun HomeScreen(
         }
     }
 
+    LaunchedEffect(uiState.incomingCall) {
+        uiState.incomingCall?.let {
+            navController.navigate(Route.VideoCall(callId = it.id, isIncomingCall = true))
+        }
+    }
+
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
@@ -143,6 +149,7 @@ fun HomeScreen(
             }
         }
     }
+
 }
 
 @Preview

@@ -34,13 +34,14 @@ class HomeViewModel(
         currentUserId = googleAuthClient.getSignedInUser()?.userId
         userRepository.changeOnlineStatus(currentUserId!!, isOnline = true)
         viewModelScope.launch {
-            callRepository.listenForIncomingCalls(this, currentUserId!!).collect {
-                when (it) {
+            callRepository.listenForIncomingCalls(this, currentUserId!!).collect { state ->
+                when (state) {
                     is CallState.IncomingCall -> {
-                        Log.d(TAG, "Incoming Call: ${it.call}")
+                        _uiState.update { it.copy(incomingCall = state.call)}
+                        Log.d(TAG, "Incoming Call: ${state.call}")
                     }
                     else -> {
-                        Log.d(TAG, "Other Call State: $it")
+                        Log.d(TAG, "Other Call State: $state")
                     }
                 }
             }

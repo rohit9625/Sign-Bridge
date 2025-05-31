@@ -5,7 +5,6 @@ import com.devx.signbridge.videocall.domain.CallId
 import com.devx.signbridge.videocall.domain.CallRepository
 import com.devx.signbridge.videocall.domain.models.Call
 import com.devx.signbridge.videocall.domain.models.CallState
-import com.devx.signbridge.videocall.domain.models.CallStatus
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
