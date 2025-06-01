@@ -3,6 +3,7 @@ package com.devx.signbridge.webrtc.data
 import android.util.Log
 import com.devx.signbridge.videocall.domain.CallRepository
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
@@ -28,13 +29,14 @@ class SignalingClient {
     val signalingCommandFlow: SharedFlow<Pair<SignalingCommand, SDPDescription>> = _signalingCommandFlow
 
     private var listenerRegistration: ListenerRegistration? = null
+    private var iceCandidatesRef: CollectionReference? = null
 
     fun startIceCandidateListener(callId: String) {
         Log.i(TAG, "Started listening for ice candidates")
         listenerRegistration?.remove()
-        val iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
+        iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
 
-        iceCandidatesRef.get().addOnSuccessListener { snapshot ->
+        iceCandidatesRef!!.get().addOnSuccessListener { snapshot ->
             for (doc in snapshot.documents) {
                 val data = doc.data ?: continue
                 val type = data["type"] as? String ?: continue
@@ -49,7 +51,7 @@ class SignalingClient {
             }
         }
 
-        listenerRegistration = iceCandidatesRef.addSnapshotListener { snapshot, error ->
+        listenerRegistration = iceCandidatesRef!!.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) return@addSnapshotListener
 
             for (docChange in snapshot.documentChanges) {
@@ -83,9 +85,9 @@ class SignalingClient {
             "type" to signalingCommand.name,
             "sdpDescription" to sdpDescription
         )
-        val iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
+        iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
 
-        iceCandidatesRef.add(message).addOnCompleteListener {
+        iceCandidatesRef!!.add(message).addOnCompleteListener {
             if (it.isSuccessful) {
                 Log.d(TAG, "[${signalingCommand.name}] Sent Successfully")
             } else {
@@ -97,6 +99,7 @@ class SignalingClient {
     fun dispose() {
         _sessionStateFlow.value = WebRTCSessionState.Offline
         listenerRegistration?.remove()
+        iceCandidatesRef?.document()?.delete()
         coroutineScope.cancel()
     }
 
