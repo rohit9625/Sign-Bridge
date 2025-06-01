@@ -2,13 +2,22 @@ package com.devx.signbridge.videocall.ui.components
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.graphics.SurfaceTexture
+import android.graphics.YuvImage
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.AttributeSet
 import android.util.Log
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
+import com.devx.signbridge.videocall.data.HandGestureRecognizer
+import com.google.mediapipe.framework.image.BitmapImageBuilder
+import com.google.mediapipe.tasks.vision.gesturerecognizer.GestureRecognizer
+import com.google.mediapipe.tasks.vision.gesturerecognizer.GestureRecognizerResult
 import org.webrtc.EglBase
 import org.webrtc.EglRenderer
 import org.webrtc.GlRectDrawer
@@ -17,6 +26,7 @@ import org.webrtc.ThreadUtils
 import org.webrtc.VideoFrame
 import org.webrtc.VideoSink
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 
 
 /**
@@ -48,6 +58,11 @@ open class VideoTextureViewRenderer @JvmOverloads constructor(
     private val uiThreadHandler = Handler(Looper.getMainLooper())
 
     /**
+     * Background executor for MediaPipe processing
+     */
+    private val backgroundExecutor = Executors.newSingleThreadExecutor()
+
+    /**
      * Whether the first frame has been rendered or not.
      */
     private var isFirstFrameRendered = false
@@ -67,18 +82,134 @@ open class VideoTextureViewRenderer @JvmOverloads constructor(
      */
     private var frameRotation = 0
 
+    /**
+     * MediaPipe gesture recognizer instance
+     */
+    private var gestureRecognizer: HandGestureRecognizer? = null
+
+    /**
+     * Frame processing interval (process every Nth frame to avoid overwhelming MediaPipe)
+     */
+    private var frameProcessingInterval = 5
+    private var frameCount = 0
+
     init {
         surfaceTextureListener = this
     }
 
     /**
-     * Called when a new frame is received. Sends the frame to be rendered.
+     * Set the MediaPipe gesture recognizer
+     */
+    fun setGestureRecognizer(
+        recognizer: HandGestureRecognizer,
+        processingInterval: Int = 5
+    ) {
+        this.gestureRecognizer = recognizer
+        this.frameProcessingInterval = processingInterval
+    }
+
+    /**
+     * Convert I420 buffer to Bitmap
+     */
+    private fun convertI420ToBitmap(i420Buffer: VideoFrame.I420Buffer): Bitmap? {
+        return try {
+            val width = i420Buffer.width
+            val height = i420Buffer.height
+
+            val ySize = width * height
+            val uvSize = width * height / 4
+
+            val nv21 = ByteArray(ySize + uvSize * 2)
+
+            // Copy Y plane
+            i420Buffer.dataY.get(nv21, 0, ySize)
+
+            // Interleave U and V planes to create NV21 format
+            val uData = ByteArray(uvSize)
+            val vData = ByteArray(uvSize)
+            i420Buffer.dataU.get(uData)
+            i420Buffer.dataV.get(vData)
+
+            for (i in 0 until uvSize) {
+                nv21[ySize + i * 2] = vData[i]
+                nv21[ySize + i * 2 + 1] = uData[i]
+            }
+
+            // Convert NV21 to RGB
+            val yuvImage = YuvImage(
+                nv21,
+                android.graphics.ImageFormat.NV21,
+                width,
+                height,
+                null
+            )
+
+            val out = java.io.ByteArrayOutputStream()
+            yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+
+            val imageBytes = out.toByteArray()
+            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+        } catch (e: Exception) {
+            Log.e("VideoTextureViewRenderer", "Error converting I420 to Bitmap", e)
+            null
+        }
+    }
+
+    /**
+     * Process [VideoFrame] for gesture recognition
+     */
+    private fun processFrameForGestures(videoFrame: VideoFrame) {
+        // Only process every Nth frame to avoid overwhelming MediaPipe
+        frameCount++
+        if (frameCount % frameProcessingInterval != 0) {
+            return
+        }
+        val recognizer = gestureRecognizer ?: return
+
+        backgroundExecutor.execute {
+            // Process frame in background thread
+            try {
+                val frameTime = SystemClock.uptimeMillis()
+                val bitmap = convertVideoFrameToBitmap(videoFrame)
+                if (bitmap != null) {
+                    recognizer.detectGestures(bitmap, frameTime)
+                }
+            } catch (e: Exception) {
+                Log.e("VideoTextureViewRenderer", "Error processing frame for gestures", e)
+            }
+        }
+    }
+
+    /**
+     * Convert WebRTC [VideoFrame] to [Bitmap] required for [GestureRecognizer]
+     */
+    private fun convertVideoFrameToBitmap(videoFrame: VideoFrame): Bitmap? {
+        var i420Buffer: VideoFrame.I420Buffer? = null
+        return try {
+            i420Buffer = videoFrame.buffer.toI420()
+            convertI420ToBitmap(i420Buffer!!)
+        } catch (e: Exception) {
+            Log.e("VideoTextureViewRenderer", "Error converting VideoFrame to Bitmap", e)
+            null
+        } finally {
+            Log.i("VideoTextureViewRenderer", "Releasing I420 buffer")
+            i420Buffer?.release()
+        }
+    }
+
+    /**
+     * Called when a new frame is received. Sends the frame to be rendered
+     *      * and processes it for gesture recognition.
      *
      * @param videoFrame The [VideoFrame] received from WebRTC connection to draw on the screen.
      */
     override fun onFrame(videoFrame: VideoFrame) {
         eglRenderer.onFrame(videoFrame)
         updateFrameData(videoFrame)
+
+        // Process frame for gesture recognition
+        processFrameForGestures(videoFrame)
     }
 
     /**
@@ -129,6 +260,7 @@ open class VideoTextureViewRenderer @JvmOverloads constructor(
         ThreadUtils.checkIsOnMainThread()
         this.rendererEvents = rendererEvents
         eglRenderer.init(sharedContext, EglBase.CONFIG_PLAIN, GlRectDrawer())
+        eglRenderer.setMirror(true)
     }
 
     /**
@@ -144,6 +276,7 @@ open class VideoTextureViewRenderer @JvmOverloads constructor(
      */
     override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
         val completionLatch = CountDownLatch(1)
+        backgroundExecutor.shutdown()
         eglRenderer.releaseEglSurface { completionLatch.countDown() }
         ThreadUtils.awaitUninterruptibly(completionLatch)
         return true

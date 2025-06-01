@@ -3,6 +3,7 @@ package com.devx.signbridge.videocall
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,9 +12,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devx.signbridge.ui.theme.SignBridgeTheme
+import com.devx.signbridge.videocall.data.HandGestureRecognizer
 import com.devx.signbridge.videocall.ui.IncomingCallScreen
 import com.devx.signbridge.videocall.ui.VideoCallScreen
 import com.devx.signbridge.videocall.ui.VideoCallViewModel
@@ -24,7 +28,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import kotlin.getValue
 
-class VideoCallActivity: ComponentActivity() {
+class VideoCallActivity: ComponentActivity(), HandGestureRecognizer.GestureRecognizerListener {
     private val callId: String by lazy {
         intent.getStringExtra(EXTRA_CALL_ID) ?: ""
     }
@@ -41,6 +45,9 @@ class VideoCallActivity: ComponentActivity() {
         intent.getBooleanExtra(EXTRA_IS_INCOMING_CALL, false)
     }
 
+    private var gestureTextState by mutableStateOf("")
+    private lateinit var handGestureRecognizer: HandGestureRecognizer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -50,6 +57,11 @@ class VideoCallActivity: ComponentActivity() {
             return
         }
         val webRtcClient: WebRtcClient by inject<WebRtcClient>()
+
+        handGestureRecognizer = HandGestureRecognizer(
+            context = this,
+            gestureRecognizerListener = this,
+        )
 
         // Set up activity for video calls
 //        setupVideoCallActivity()
@@ -89,7 +101,9 @@ class VideoCallActivity: ComponentActivity() {
                                 onEvent = videoCallViewModel::onEvent,
                                 onScreenReady = videoCallViewModel::onCallInitiated,
                                 remoteVideoTrackState = remoteVideoTrack,
-                                localVideoTrackState = localVideoTrack
+                                localVideoTrackState = localVideoTrack,
+                                gestureRecognizer = handGestureRecognizer,
+                                gestureText = gestureTextState
                             )
                         }
                     }
@@ -144,8 +158,25 @@ class VideoCallActivity: ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        handGestureRecognizer.clearGestureRecognizer()
         // Clean up video call resources
 //        videoCallViewModel.cleanup()
+    }
+
+    override fun onError(error: String, errorCode: Int) {
+        Log.e("HandGestureRecognizer", "Error: $error")
+    }
+
+    override fun onResults(resultBundle: HandGestureRecognizer.ResultBundle) {
+
+        if (resultBundle.results.isNotEmpty()) {
+            val classification = resultBundle.results.first()
+            gestureTextState = classification.name
+            Log.d("HandGestureRecognizer", "Classification(name: ${classification.name}, score: ${classification.confidence}")
+        } else {
+            gestureTextState = ""
+            Log.w("HandGestureRecognizer", "No results found")
+        }
     }
 
     companion object {

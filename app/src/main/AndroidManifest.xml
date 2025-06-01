@@ -31,8 +31,7 @@
 
         <activity
             android:name=".videocall.VideoCallActivity"
-            android:exported="false"
-            android:launchMode="singleTop" />
+            android:exported="false" />
 
         <service android:name=".PushNotificationService" android:exported="false">
             <intent-filter>

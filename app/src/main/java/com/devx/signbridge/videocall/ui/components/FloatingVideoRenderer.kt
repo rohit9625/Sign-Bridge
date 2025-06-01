@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.devx.signbridge.videocall.data.HandGestureRecognizer
 import org.webrtc.VideoTrack
 
 /**
@@ -40,7 +41,9 @@ fun FloatingVideoRenderer(
   videoTrack: VideoTrack,
   parentBounds: IntSize,
   paddingValues: PaddingValues,
-  modifier: Modifier = Modifier
+  modifier: Modifier = Modifier,
+  isGestureRecognitionEnabled: Boolean = false,
+  gestureRecognizer: HandGestureRecognizer? = null
 ) {
   var videoSize by remember { mutableStateOf(IntSize(0, 0)) }
   var offsetX by remember { mutableStateOf(0f) }
@@ -102,7 +105,9 @@ fun FloatingVideoRenderer(
       modifier = Modifier
         .fillMaxSize()
         .clip(RoundedCornerShape(16.dp)),
-      videoTrack = videoTrack
+      videoTrack = videoTrack,
+      enableGestureRecognition = isGestureRecognitionEnabled,
+      gestureRecognizer = gestureRecognizer
     )
   }
 }
