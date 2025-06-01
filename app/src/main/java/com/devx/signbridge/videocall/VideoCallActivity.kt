@@ -23,6 +23,7 @@ import com.devx.signbridge.videocall.ui.VideoCallScreen
 import com.devx.signbridge.videocall.ui.VideoCallViewModel
 import com.devx.signbridge.webrtc.data.LocalWebRtcClient
 import com.devx.signbridge.webrtc.domain.WebRtcClient
+import com.devx.signbridge.webrtc.peer.SignBridgePeerType
 import org.koin.android.ext.android.inject
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -56,7 +57,11 @@ class VideoCallActivity: ComponentActivity(), HandGestureRecognizer.GestureRecog
             finish()
             return
         }
-        val webRtcClient: WebRtcClient by inject<WebRtcClient>()
+        val peerType = if(isIncomingCall) SignBridgePeerType.CALLEE else SignBridgePeerType.CALLER
+
+        val webRtcClient: WebRtcClient by inject<WebRtcClient>() {
+            parametersOf(peerType)
+        }
 
         handGestureRecognizer = HandGestureRecognizer(
             context = this,
@@ -75,7 +80,7 @@ class VideoCallActivity: ComponentActivity(), HandGestureRecognizer.GestureRecog
                         color = MaterialTheme.colorScheme.background
                     ) {
                         val videoCallViewModel = koinViewModel<VideoCallViewModel>(
-                            parameters = { parametersOf(callId) }
+                            parameters = { parametersOf(callId, peerType) }
                         )
                         val videoCallState by videoCallViewModel.videoCallState.collectAsStateWithLifecycle()
                         val remoteVideoTrack by videoCallViewModel.remoteVideoTrackFlow.collectAsStateWithLifecycle(null)

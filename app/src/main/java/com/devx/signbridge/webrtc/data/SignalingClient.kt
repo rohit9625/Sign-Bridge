@@ -1,7 +1,9 @@
 package com.devx.signbridge.webrtc.data
 
 import android.util.Log
+import com.devx.signbridge.videocall.domain.CallRepository
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.CoroutineScope
@@ -28,17 +30,40 @@ class SignalingClient {
     private var listenerRegistration: ListenerRegistration? = null
 
     fun startIceCandidateListener(callId: String) {
+        Log.i(TAG, "Started listening for ice candidates")
         listenerRegistration?.remove()
         val iceCandidatesRef = db.collection("calls").document(callId).collection("ice_candidates")
+
+        iceCandidatesRef.get().addOnSuccessListener { snapshot ->
+            for (doc in snapshot.documents) {
+                val data = doc.data ?: continue
+                val type = data["type"] as? String ?: continue
+                val sdpDescription = data["sdpDescription"] as? String ?: continue
+
+                val command = SignalingCommand.valueOf(type)
+                Log.d(TAG, "Fetched [${command.name}] from existing documents")
+
+                coroutineScope.launch {
+                    _signalingCommandFlow.emit(command to sdpDescription)
+                }
+            }
+        }
+
         listenerRegistration = iceCandidatesRef.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) return@addSnapshotListener
 
             for (docChange in snapshot.documentChanges) {
+                // Skip if ICE Candidate, Offer, or Answer document is modified or removed
+                /** Note: We only care about new documents added */
+                if (docChange.type != DocumentChange.Type.ADDED) continue
+
                 val data = docChange.document.data
                 val type = data["type"] as? String ?: continue
                 val sdpDescription = data["sdpDescription"] as? String ?: continue
 
                 val command = SignalingCommand.valueOf(type)
+                Log.d(TAG, "Received new [${command.name}] via listener")
+
                 coroutineScope.launch {
                     _signalingCommandFlow.emit(command to sdpDescription)
                 }

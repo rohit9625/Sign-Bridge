@@ -77,7 +77,7 @@ fun VideoCallScreen(
                     FloatingVideoRenderer(
                         videoTrack = localVideoTrack,
                         gestureRecognizer = gestureRecognizer,
-                        isGestureRecognitionEnabled = true,
+                        isGestureRecognitionEnabled = false,
                         parentBounds = parentSize,
                         paddingValues = PaddingValues(0.dp),
                         modifier = Modifier

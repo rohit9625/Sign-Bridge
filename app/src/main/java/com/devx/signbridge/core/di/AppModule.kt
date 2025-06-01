@@ -18,6 +18,7 @@ import com.devx.signbridge.webrtc.data.SignalingClient
 import com.devx.signbridge.webrtc.data.WebRtcClientImpl
 import com.devx.signbridge.webrtc.domain.WebRtcClient
 import com.devx.signbridge.webrtc.peer.SignBridgePeerConnectionFactory
+import com.devx.signbridge.webrtc.peer.SignBridgePeerType
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.parameter.parametersOf
@@ -32,11 +33,12 @@ val appModule = module {
     single<CallRepository> { CallRepositoryImpl() }
     single { SignalingClient() }
     single { SignBridgePeerConnectionFactory(context = androidContext()) }
-    single<WebRtcClient> {
+    single<WebRtcClient> { (peerType: SignBridgePeerType) ->
         WebRtcClientImpl(
             context = androidContext(),
             signalingClient = get(),
-            peerConnectionFactory = get()
+            peerConnectionFactory = get(),
+            peerType = peerType
         )
     }
 
@@ -50,7 +52,7 @@ val appModule = module {
         HomeViewModel(googleAuthClient = get { parametersOf(activityCtx) }, userRepository = get(), callRepository = get())
     }
     viewModel { SearchUserViewModel(userRepository = get()) }
-    viewModel { (callId: String) ->
-        VideoCallViewModel(webRtcClient = get { parametersOf(callId) }, currentCallId = callId, callRepository = get())
+    viewModel { (callId: String, peerType: SignBridgePeerType) ->
+        VideoCallViewModel(webRtcClient = get { parametersOf(peerType) }, currentCallId = callId, callRepository = get())
     }
 }

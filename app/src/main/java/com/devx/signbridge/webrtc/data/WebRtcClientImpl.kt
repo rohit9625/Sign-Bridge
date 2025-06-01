@@ -40,6 +40,7 @@ val LocalWebRtcClient: ProvidableCompositionLocal<WebRtcClient> =
 
 class WebRtcClientImpl(
     private val context: Context,
+    private val peerType: SignBridgePeerType,
     override val signalingClient: SignalingClient,
     override val peerConnectionFactory: SignBridgePeerConnectionFactory
 ): WebRtcClient {
@@ -54,7 +55,7 @@ class WebRtcClientImpl(
     override val localVideoTrackFlow: SharedFlow<VideoTrack> = _localVideoTrackFlow
 
     // used to send remote video track to the sender
-    private val _remoteVideoTrackFlow = MutableSharedFlow<VideoTrack>()
+    private val _remoteVideoTrackFlow = MutableSharedFlow<VideoTrack>(replay = 1)
     override val remoteVideoTrackFlow: SharedFlow<VideoTrack> = _remoteVideoTrackFlow
 
     private val mediaConstraints = MediaConstraints().apply {
@@ -122,9 +123,10 @@ class WebRtcClientImpl(
         peerConnectionFactory.makePeerConnection(
             coroutineScope = sessionManagerScope,
             configuration = peerConnectionFactory.rtcConfig,
-            type = SignBridgePeerType.CALLEE,
+            type = peerType,
             mediaConstraints = mediaConstraints,
-            onIceCandidateRequest = { iceCandidate, _ ->
+            onIceCandidateRequest = { iceCandidate, type ->
+                Log.d(TAG, "[SDP] ice candidate: $iceCandidate; Type: ${type.name}")
                 signalingClient.sendCommand(
                     callId = currentCallId,
                     signalingCommand = SignalingClient.SignalingCommand.ICE,
