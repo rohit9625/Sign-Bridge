@@ -108,7 +108,10 @@ class VideoCallActivity: ComponentActivity(), HandGestureRecognizer.GestureRecog
                                 remoteVideoTrackState = remoteVideoTrack,
                                 localVideoTrackState = localVideoTrack,
                                 gestureRecognizer = handGestureRecognizer,
-                                gestureText = gestureTextState
+                                gestureText = gestureTextState,
+                                onCallEnd = {
+                                    handleCallEnded()
+                                }
                             )
                         }
                     }

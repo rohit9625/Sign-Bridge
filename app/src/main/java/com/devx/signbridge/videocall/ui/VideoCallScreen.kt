@@ -55,7 +55,8 @@ fun VideoCallScreen(
     remoteVideoTrackState: VideoTrack? = null,
     localVideoTrackState: VideoTrack? = null,
     gestureRecognizer: HandGestureRecognizer? = null,
-    gestureText: String = ""
+    gestureText: String = "",
+    onCallEnd: () -> Unit = {},
 ) {
     var enableGestureRecognition by rememberSaveable { mutableStateOf(false) }
 
@@ -155,6 +156,7 @@ fun VideoCallScreen(
 
                             VideoCallEvent.EndCall -> {
                                 onEvent(VideoCallEvent.EndCall)
+                                onCallEnd()
                             }
                         }
                     }

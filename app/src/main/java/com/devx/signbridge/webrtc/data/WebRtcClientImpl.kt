@@ -253,7 +253,8 @@ class WebRtcClientImpl(
             videoTrack.dispose()
         }
         localAudioTrack.dispose()
-        localVideoTrack.dispose()
+        // We shouldn't dispose localVideoTrack as it is disposed on the VideoRenderer.
+        // localVideoTrack.dispose()
 
         videoCapturer.stopCapture()
         videoCapturer.dispose()
