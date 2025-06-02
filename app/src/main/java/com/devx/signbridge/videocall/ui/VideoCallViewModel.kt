@@ -33,7 +33,7 @@ class VideoCallViewModel(
     fun onEvent(e: VideoCallEvent) {
         when (e) {
             is VideoCallEvent.ToggleMicrophone -> {
-                _videoCallState.update { it.copy(isMicrophoneEnabled = e.isEnabled) }
+                _videoCallState.update { it.copy(isMicrophoneEnabled = !e.isEnabled) }
                 webRtcClient.toggleMicrophone(e.isEnabled)
             }
             is VideoCallEvent.ToggleCamera -> {
