@@ -112,6 +112,6 @@ class HandGestureRecognizer(
 
     companion object {
         private const val TAG = "HandGestureClassifier"
-        private const val MP_GESTURE_MODEL = "rps_gesture_recognizer.task"
+        private const val MP_GESTURE_MODEL = "static_gesture_recognizer.task"
     }
 }
